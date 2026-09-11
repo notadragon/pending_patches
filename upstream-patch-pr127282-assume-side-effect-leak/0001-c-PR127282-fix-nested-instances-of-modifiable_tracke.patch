@@ -1,0 +1,103 @@
+From 6845c419380ebb36d9e531d333e1649bc6cf031f Mon Sep 17 00:00:00 2001
+From: Joshua Berne <berne@notadragon.com>
+Date: Fri, 11 Sep 2026 16:35:08 -0400
+Subject: [PATCH] c++: [PR127282] fix nested instances of modifiable_tracker
+
+PR c++/127282 - [[assume]]: a nested assumption's side effects are not rolled back during constant evaluation
+
+During constant evaluation of the predicate of an [[assume]] attribute a
+pointer to a set of modifiable values is stored in the constexpr_global_ctx.
+The class modifiable_tracker populates this value when evaluation of the
+predicate starts and clears it when it is complete, which results in
+nullptr instead of the original set when an [[assume]] is evaluated during
+the evaluation of the predicate of another assume.
+
+Fix this by storing the previous value (nullptr in non-nested cases) and
+restoring it upon destruction instead of clearing the global value.
+
+	PR c++/127282
+
+gcc/cp/ChangeLog:
+
+	* constexpr.cc: save and restore the global pointer of modifiable trees
+
+gcc/testsuite/ChangeLog:
+
+	* g++.dg/cpp23/attr-assume10.C: add a case with nested assumptions
+
+Signed-off-by: Joshua Berne <berne@notadragon.com>
+---
+ gcc/cp/constexpr.cc                        | 10 +++++++---
+ gcc/testsuite/g++.dg/cpp23/attr-assume10.C | 19 ++++++++++++++++++-
+ 2 files changed, 25 insertions(+), 4 deletions(-)
+
+diff --git a/gcc/cp/constexpr.cc b/gcc/cp/constexpr.cc
+index a54fed1fdb9..2b8595675e6 100644
+--- a/gcc/cp/constexpr.cc
++++ b/gcc/cp/constexpr.cc
+@@ -1298,7 +1298,9 @@ public:
+ /* Helper class for constexpr_global_ctx.  In some cases we want to avoid
+    side-effects from evaluation of a particular subexpression of a
+    constant-expression.  In such cases we use modifiable_tracker to prevent
+-   modification of variables created outside of that subexpression.
++   modification of variables created outside of that subexpression.  Keep and
++   then restore the original value of global->modifiable so that tracker
++   instantiations can nest.
+ 
+    ??? We could change the hash_set to a hash_map, allow and track external
+    modifications, and roll them back in the destructor.  It's not clear to me
+@@ -1308,8 +1310,10 @@ class modifiable_tracker
+ {
+   hash_set<tree> set;
+   constexpr_global_ctx *global;
++  hash_set<tree> *previous_set;
+ public:
+-  modifiable_tracker (constexpr_global_ctx *g): global(g)
++  modifiable_tracker (constexpr_global_ctx *g)
++    : global (g), previous_set (global->modifiable)
+   {
+     global->modifiable = &set;
+   }
+@@ -1317,7 +1321,7 @@ public:
+   {
+     for (tree t: set)
+       global->clear_value (t);
+-    global->modifiable = nullptr;
++    global->modifiable = previous_set;
+   }
+ };
+ 
+diff --git a/gcc/testsuite/g++.dg/cpp23/attr-assume10.C b/gcc/testsuite/g++.dg/cpp23/attr-assume10.C
+index 475555ac415..4e426740546 100644
+--- a/gcc/testsuite/g++.dg/cpp23/attr-assume10.C
++++ b/gcc/testsuite/g++.dg/cpp23/attr-assume10.C
+@@ -1,4 +1,4 @@
+-// Test that s.i is not modified by the assume.
++// Test that s.i is not modified by assume or a nested assume.
+ // { dg-do compile { target c++17 } }
+ 
+ struct string
+@@ -20,3 +20,20 @@ constexpr int f()
+ }
+ 
+ static_assert (f());
++
++// PR c++/127282, a nested assume also needs to not modify values or allow
++// other expressions within the enclosing assume to modify values.
++constexpr int g()
++{
++  string s ("foobar");
++  [[assume (
++      [&](){[[ assume (s.length () > 0) ]]; return true; }()
++   && s.length() > 0)
++  ]];
++  if (s.i != 0) __builtin_abort();
++  int len = s.length ();
++  if (s.i != 1) __builtin_abort();
++  return len;
++}
++
++static_assert (g());
+-- 
+2.43.0
+
