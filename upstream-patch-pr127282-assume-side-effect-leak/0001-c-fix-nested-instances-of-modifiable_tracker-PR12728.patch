@@ -1,4 +1,4 @@
-From 6fe4391064e4ebe9e560cf96d7eb21241c7e3e00 Mon Sep 17 00:00:00 2001
+From 8df79ccc268db883202afda0f4a4c0866dd8e560 Mon Sep 17 00:00:00 2001
 From: Joshua Berne <berne@notadragon.com>
 Date: Fri, 11 Sep 2026 16:35:08 -0400
 Subject: [PATCH] c++: fix nested instances of modifiable_tracker [PR127282]
@@ -73,7 +73,7 @@ index a54fed1fdb9..b03af109835 100644
  };
  
 diff --git a/gcc/testsuite/g++.dg/cpp23/attr-assume10.C b/gcc/testsuite/g++.dg/cpp23/attr-assume10.C
-index 475555ac415..4e426740546 100644
+index 475555ac415..3f4af3fae95 100644
 --- a/gcc/testsuite/g++.dg/cpp23/attr-assume10.C
 +++ b/gcc/testsuite/g++.dg/cpp23/attr-assume10.C
 @@ -1,4 +1,4 @@
@@ -93,8 +93,8 @@ index 475555ac415..4e426740546 100644
 +{
 +  string s ("foobar");
 +  [[assume (
-+      [&](){[[ assume (s.length () > 0) ]]; return true; }()
-+   && s.length() > 0)
++      [&](){[[assume (s.length () > 0)]]; return true; }()
++   && s.length () > 0)
 +  ]];
 +  if (s.i != 0) __builtin_abort();
 +  int len = s.length ();
