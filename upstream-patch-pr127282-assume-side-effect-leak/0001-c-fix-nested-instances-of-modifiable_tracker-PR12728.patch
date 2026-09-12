@@ -1,4 +1,4 @@
-From 2a479eb78a4f03b484bf8a8d6615583e78870f70 Mon Sep 17 00:00:00 2001
+From 6fe4391064e4ebe9e560cf96d7eb21241c7e3e00 Mon Sep 17 00:00:00 2001
 From: Joshua Berne <berne@notadragon.com>
 Date: Fri, 11 Sep 2026 16:35:08 -0400
 Subject: [PATCH] c++: fix nested instances of modifiable_tracker [PR127282]
@@ -28,9 +28,7 @@ gcc/cp/ChangeLog:
 
 gcc/testsuite/ChangeLog:
 
-	* g++.dg/cpp23/attr-assume10.C: Add a case with a nested
-	assumption that then modifies a value after the inner assumption is
-	evaluated.
+	* g++.dg/cpp23/attr-assume10.C: Add a case with a nested assumption.
 
 Signed-off-by: Joshua Berne <berne@notadragon.com>
 ---
