@@ -1,0 +1,136 @@
+From cd0063e40f4422ead0faee1a12374dc3dd59463d Mon Sep 17 00:00:00 2001
+From: Joshua Berne <berne@notadragon.com>
+Date: Thu, 17 Sep 2026 12:29:06 -0400
+Subject: [PATCH] c++/contracts: fix handling of __contract_assert [PR127295]
+
+PR c++/127295 - [c++26][contracts] ICE in grok_contract on the __contract_assert extension spelling
+
+The gcc-specific spelling of contract_assert, __contract_assert, was untested
+and just didn't work.  Changed uses of the raw string "contract_assert" to
+identify the token based on what was parsed (which identifies both
+contract_assert and __contract_assert as a reserved identifier with the code
+RID_CONTASSERT).
+
+Add one use of the alternate spelling in a test, as well as a test of the
+previously untested diagnostic that includes the keyword spelling in its
+output.
+
+	PR c++/127295
+
+gcc/cp/ChangeLog:
+
+	* contracts.cc (grok_contract): Identify assertion statements
+	by keyword and not string comparison.
+	* parser.cc (cp_parser_contract_assert): Include keyword used
+	on token in diagnostics.
+
+gcc/testsuite/ChangeLog:
+
+	* g++.dg/contracts/cpp26/assertion-statement.C: Add use of
+	__contract_assert.
+	* g++.dg/contracts/cpp26/assertion-statement-errors.C: Test
+	attribute warning with __contract_assert.
+	* g++.dg/contracts/cpp26/no_contracts.C: Check keyword errors with
+	-fno-contracts.
+
+Signed-off-by: Joshua Berne <berne@notadragon.com>
+---
+ gcc/cp/contracts.cc                                  |  3 ++-
+ gcc/cp/parser.cc                                     | 12 ++++++------
+ .../contracts/cpp26/assertion-statement-errors.C     |  1 +
+ .../g++.dg/contracts/cpp26/assertion-statement.C     |  2 ++
+ gcc/testsuite/g++.dg/contracts/cpp26/no_contracts.C  |  7 +++++++
+ 5 files changed, 18 insertions(+), 7 deletions(-)
+ create mode 100644 gcc/testsuite/g++.dg/contracts/cpp26/no_contracts.C
+
+diff --git a/gcc/cp/contracts.cc b/gcc/cp/contracts.cc
+index cca568fa343..f509424fd7c 100644
+--- a/gcc/cp/contracts.cc
++++ b/gcc/cp/contracts.cc
+@@ -2083,7 +2083,8 @@ grok_contract (tree contract_spec, tree mode, tree result, cp_expr condition,
+ 
+   tree_code code;
+   contract_assertion_kind kind = CAK_INVALID;
+-  if (id_equal (contract_spec, "contract_assert"))
++  if (IDENTIFIER_KEYWORD_P (contract_spec)
++      && C_RID_CODE (contract_spec) == RID_CONTASSERT)
+     {
+       code = ASSERTION_STMT;
+       kind = CAK_ASSERT;
+diff --git a/gcc/cp/parser.cc b/gcc/cp/parser.cc
+index 720dec6841e..9c4245bc3f5 100644
+--- a/gcc/cp/parser.cc
++++ b/gcc/cp/parser.cc
+@@ -33897,16 +33897,16 @@ cp_parser_late_contracts (cp_parser *parser, tree fndecl)
+ static tree
+ cp_parser_contract_assert (cp_parser *parser, cp_token *token)
+ {
++  tree cont_assert = token->u.value;
++
+   if (!flag_contracts)
+     {
+-      error_at (token->location, "%qs is only available with %qs",
+-		"contract_assert", "-fcontracts");
++      error_at (token->location, "%qE is only available with %qs",
++		cont_assert, "-fcontracts");
+       cp_parser_skip_to_end_of_statement (parser);
+       return error_mark_node;
+     }
+ 
+-  tree cont_assert = token->u.value;
+-
+   token = cp_lexer_consume_token (parser->lexer);
+   location_t loc = token->location;
+ 
+@@ -33915,8 +33915,8 @@ cp_parser_contract_assert (cp_parser *parser, cp_token *token)
+   if (std_attrs)
+     {
+       attrs_loc = make_location (attrs_loc, attrs_loc, input_location);
+-      warning_at (attrs_loc, OPT_Wattributes, "attributes are ignored on %qs",
+-		  "contract_assert");
++      warning_at (attrs_loc, OPT_Wattributes, "attributes are ignored on %qE",
++		  cont_assert);
+       std_attrs = NULL_TREE;
+     }
+ 
+diff --git a/gcc/testsuite/g++.dg/contracts/cpp26/assertion-statement-errors.C b/gcc/testsuite/g++.dg/contracts/cpp26/assertion-statement-errors.C
+index ef711368404..32204cbf8ca 100644
+--- a/gcc/testsuite/g++.dg/contracts/cpp26/assertion-statement-errors.C
++++ b/gcc/testsuite/g++.dg/contracts/cpp26/assertion-statement-errors.C
+@@ -36,6 +36,7 @@ int main()
+     g();
+ 
+     contract_assert [[deprecated]] (i == 3);  // { dg-warning {attributes are ignored on 'contract_assert'} }
++    __contract_assert [[deprecated]] (i == 3);  // { dg-warning {attributes are ignored on '__contract_assert'} }
+ 
+     return 0;
+ }
+diff --git a/gcc/testsuite/g++.dg/contracts/cpp26/assertion-statement.C b/gcc/testsuite/g++.dg/contracts/cpp26/assertion-statement.C
+index c4ec7f88721..d2d089ac136 100644
+--- a/gcc/testsuite/g++.dg/contracts/cpp26/assertion-statement.C
++++ b/gcc/testsuite/g++.dg/contracts/cpp26/assertion-statement.C
+@@ -11,6 +11,8 @@ int main()
+ {
+   int x;
+ 
++  __contract_assert( x >= 0);
++
+   contract_assert( x >= 0);
+   contract_assert( x < 0);
+   contract_assert( x == 0);
+diff --git a/gcc/testsuite/g++.dg/contracts/cpp26/no_contracts.C b/gcc/testsuite/g++.dg/contracts/cpp26/no_contracts.C
+new file mode 100644
+index 00000000000..2162b8e05b9
+--- /dev/null
++++ b/gcc/testsuite/g++.dg/contracts/cpp26/no_contracts.C
+@@ -0,0 +1,7 @@
++// { dg-options "-fno-contracts -std=c++26" }
++
++void f()
++{
++    contract_assert(false); // { dg-error "'contract_assert' is only available with '-fcontracts'" }
++    __contract_assert(false); // { dg-error "'__contract_assert' is only available with '-fcontracts'" }
++}
+-- 
+2.43.0
+
