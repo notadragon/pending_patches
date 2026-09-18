@@ -23,8 +23,8 @@ then upstream's own history, plus the
 
 | Patch directory | Bug | Summary | PR | Commit | Status |
 |---|---|---|---|---|---|
-| [`upstream-patch-pr127295-contract-assert-alt-spelling/`](upstream-patch-pr127295-contract-assert-alt-spelling/) | [GCC-29](../gnu_gcc/bug-reports/gcc-29/gcc-29-contract-assert-alt-spelling-ice.md) | The `__contract_assert` extension spelling ICEs in `grok_contract` | [PR127295](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127295) | `cd0063e40f4` | written 2026-09-17; full regression run outstanding |
-| [`upstream-patch-pr125459-constexpr-repeat-call/`](upstream-patch-pr125459-constexpr-repeat-call/) | [GCC-3](../gnu_gcc/bug-reports/gcc-03/gcc-03-constexpr-repeat-call.md) | A contract predicate re-invoking a constexpr function already called in the same constant evaluation is wrongly rejected as non-constant | [PR125459](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=125459) | `1407b9b035d` | written 2026-09-17; patch file predates the amended message, re-emit; full regression run outstanding |
+| [`upstream-patch-pr127295-contract-assert-alt-spelling/`](upstream-patch-pr127295-contract-assert-alt-spelling/) | [GCC-29](../gnu_gcc/bug-reports/gcc-29/gcc-29-contract-assert-alt-spelling-ice.md) | The `__contract_assert` extension spelling ICEs in `grok_contract` | [PR127295](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127295) | `cd0063e40f4` | validated 2026-09-17 on `6e53e027e587`, `dg.exp`: 0 regressions, 5 new passes |
+| [`upstream-patch-pr125459-constexpr-repeat-call/`](upstream-patch-pr125459-constexpr-repeat-call/) | [GCC-3](../gnu_gcc/bug-reports/gcc-03/gcc-03-constexpr-repeat-call.md) | A contract predicate re-invoking a constexpr function already called in the same constant evaluation is wrongly rejected as non-constant | [PR125459](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=125459) | `1407b9b035d` | validated 2026-09-17 on `6e53e027e587`, `dg.exp`: 0 regressions, 2 new passes |
 
 ## Submitted, awaiting response
 
