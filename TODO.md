@@ -19,18 +19,22 @@ A row leaves this file when upstream commits the change; the durable record is
 then upstream's own history, plus the
 `Fixed upstream by us` table in `../gnu_gcc/bug-reports/README.md`.
 
-## Pending, not yet sent
+## In flight
 
-| Patch directory | Bug | Summary | PR | Commit | Status |
-|---|---|---|---|---|---|
-| [`upstream-patch-pr127295-contract-assert-alt-spelling/`](upstream-patch-pr127295-contract-assert-alt-spelling/) | [GCC-29](../gnu_gcc/bug-reports/gcc-29/gcc-29-contract-assert-alt-spelling-ice.md) | The `__contract_assert` extension spelling ICEs in `grok_contract` | [PR127295](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127295) | `cd0063e40f4` | validated 2026-09-17 on `6e53e027e587`, `dg.exp`: 0 regressions, 5 new passes |
-| [`upstream-patch-pr125459-constexpr-repeat-call/`](upstream-patch-pr125459-constexpr-repeat-call/) | [GCC-3](../gnu_gcc/bug-reports/gcc-03/gcc-03-constexpr-repeat-call.md) | A contract predicate re-invoking a constexpr function already called in the same constant evaluation is wrongly rejected as non-constant | [PR125459](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=125459) | `1407b9b035d` | validated 2026-09-17 on `6e53e027e587`, `dg.exp`: 0 regressions, 2 new passes |
+Prepared and not yet landed, whether or not it has been sent.
 
-## Submitted, awaiting response
+**Sent** is the last revision that reached `gcc-patches@gcc.gnu.org`, and
+**Next action** is what is owed right now.  The two together are the whole
+point of one table rather than two: a patch that has been sent once can still
+have an unsent revision sitting in its directory, and splitting "pending" from
+"submitted" gave that state nowhere to live.  All three rows below are waiting
+on an email.
 
-| Patch directory | Bug | PR | Posted | Status |
-|---|---|---|---|---|
-| [`upstream-patch-pr127281-retval-double-destroy/`](upstream-patch-pr127281-retval-double-destroy/) | [GCC-5](../gnu_gcc/bug-reports/gcc-05/gcc-05-contract-retval-double-destroy.md) | [PR127281](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127281) | 2026-09-16, [gcc-patches 731369](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731369.html) | awaiting review |
+| Patch directory | Bug | Summary | PR | Commit | Validated | Sent | Next action |
+|---|---|---|---|---|---|---|---|
+| [`upstream-patch-pr127281-retval-double-destroy/`](upstream-patch-pr127281-retval-double-destroy/) | [GCC-5](../gnu_gcc/bug-reports/gcc-05/gcc-05-contract-retval-double-destroy.md) | A function with contracts emits the return-value cleanup twice: the returned object is destroyed twice, and an ICE in `gimple_add_tmp_var` | [PR127281](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127281) | `89be19f150d` | no run recorded here -- it was sent before `patch_validate.py` existed (2026-09-17), and v2 differs from v1 only by a source comment | **v1**, 2026-09-16, [gcc-patches 731369](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731369.html) -- no response yet | **Send v2**, which is prepared and unsent.  It adds a `FIXME` at the sentinel override recording that the return object is still not destroyed when the postcondition evaluations exit via an exception ([PR127414](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127414)); no functional change.  Note the change since v1 in the mail |
+| [`upstream-patch-pr127295-contract-assert-alt-spelling/`](upstream-patch-pr127295-contract-assert-alt-spelling/) | [GCC-29](../gnu_gcc/bug-reports/gcc-29/gcc-29-contract-assert-alt-spelling-ice.md) | The `__contract_assert` extension spelling ICEs in `grok_contract` | [PR127295](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127295) | `cd0063e40f4` | validated 2026-09-17 on `6e53e027e587`, `dg.exp`: 0 regressions, 5 new passes | never | **Send v1**, which is prepared and unsent |
+| [`upstream-patch-pr125459-constexpr-repeat-call/`](upstream-patch-pr125459-constexpr-repeat-call/) | [GCC-3](../gnu_gcc/bug-reports/gcc-03/gcc-03-constexpr-repeat-call.md) | A contract predicate re-invoking a constexpr function already called in the same constant evaluation is wrongly rejected as non-constant | [PR125459](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=125459) | `1407b9b035d` | validated 2026-09-17 on `6e53e027e587`, `dg.exp`: 0 regressions, 2 new passes | never | **Send v1**, which is prepared and unsent |
 
 ## Landed
 
