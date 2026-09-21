@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Patch file | `0001-c-contracts-assertion-predicate-re-invoking-constexp.patch` |
-| Emitted from | `1407b9b035d7` |
+| Patch file | `v3-0001-c-contracts-assertion-predicate-re-invoking-const.patch` |
+| Emitted from | `81ada7e35cbf` |
 | Base | `6e53e027e587` (upstream/master) |
 | Selector | `dg.exp` |
-| Date | 2026-09-17 |
+| Date | 2026-09-21 |
 | Regressions | 0 |
 | Improvements | 2 |
 | Verdict | clean |
