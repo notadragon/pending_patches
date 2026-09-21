@@ -15,9 +15,19 @@ Each row ties together three things kept in three different places:
 
 Relative links assume the usual side-by-side `~/repos` layout.
 
-A row leaves this file when upstream commits the change; the durable record is
-then upstream's own history, plus the
-`Fixed upstream by us` table in `../gnu_gcc/bug-reports/README.md`.
+A row moves to [Landed](#landed) when upstream commits the change, **and its
+directory is deleted in the same breath** -- the patch and its validation
+artifacts have done their job once the commit exists, and a stale copy of a
+diff that upstream may since have touched is worse than none.  What the row
+keeps is the correspondence: our id, the PR, the message that was accepted,
+and the commit.  Anything else is in this repo's history, and in upstream's,
+plus the `Fixed upstream by us` table in `../gnu_gcc/bug-reports/README.md`.
+
+**That second record lags, deliberately.** Retiring a `bug-reports/` row is
+part of a rebase -- it deletes the writeup and the reproducer, retires the
+`verify-cases.txt` case, and re-records `verify-expected.txt` -- so it happens
+on the rebase, not the day the patch lands.  GCC-5 and GCC-29 are still in the
+open table there as of 2026-09-20 even though both fixes are upstream.
 
 ## In flight
 
@@ -27,20 +37,29 @@ Prepared and not yet landed, whether or not it has been sent.
 **Next action** is what is owed right now.  The two together are the whole
 point of one table rather than two: a patch that has been sent once can still
 have an unsent revision sitting in its directory, and splitting "pending" from
-"submitted" gave that state nowhere to live.  All three rows below are waiting
-on an email.
+"submitted" gave that state nowhere to live.  The one row below is the other
+state again: sent, reviewed, and owing a revision that has not been written.
 
 | Patch directory | Bug | Summary | PR | Commit | Validated | Sent | Next action |
 |---|---|---|---|---|---|---|---|
-| [`upstream-patch-pr127281-retval-double-destroy/`](upstream-patch-pr127281-retval-double-destroy/) | [GCC-5](../gnu_gcc/bug-reports/gcc-05/gcc-05-contract-retval-double-destroy.md) | A function with contracts emits the return-value cleanup twice: the returned object is destroyed twice, and an ICE in `gimple_add_tmp_var` | [PR127281](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127281) | `89be19f150d` | no run recorded here -- it was sent before `patch_validate.py` existed (2026-09-17), and v2 differs from v1 only by a source comment | **v1**, 2026-09-16, [gcc-patches 731369](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731369.html) -- no response yet | **Send v2**, which is prepared and unsent.  It adds a `FIXME` at the sentinel override recording that the return object is still not destroyed when the postcondition evaluations exit via an exception ([PR127414](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127414)); no functional change.  Note the change since v1 in the mail |
-| [`upstream-patch-pr127295-contract-assert-alt-spelling/`](upstream-patch-pr127295-contract-assert-alt-spelling/) | [GCC-29](../gnu_gcc/bug-reports/gcc-29/gcc-29-contract-assert-alt-spelling-ice.md) | The `__contract_assert` extension spelling ICEs in `grok_contract` | [PR127295](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127295) | `cd0063e40f4` | validated 2026-09-17 on `6e53e027e587`, `dg.exp`: 0 regressions, 5 new passes | never | **Send v1**, which is prepared and unsent |
-| [`upstream-patch-pr125459-constexpr-repeat-call/`](upstream-patch-pr125459-constexpr-repeat-call/) | [GCC-3](../gnu_gcc/bug-reports/gcc-03/gcc-03-constexpr-repeat-call.md) | A contract predicate re-invoking a constexpr function already called in the same constant evaluation is wrongly rejected as non-constant | [PR125459](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=125459) | `1407b9b035d` | validated 2026-09-17 on `6e53e027e587`, `dg.exp`: 0 regressions, 2 new passes | never | **Send v1**, which is prepared and unsent |
+| [`upstream-patch-pr125459-constexpr-repeat-call/`](upstream-patch-pr125459-constexpr-repeat-call/) | [GCC-3](../gnu_gcc/bug-reports/gcc-03/gcc-03-constexpr-repeat-call.md) | A contract predicate re-invoking a constexpr function already called in the same constant evaluation is wrongly rejected as non-constant | [PR125459](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=125459) | `1407b9b035d` | validated 2026-09-17 on `6e53e027e587`, `dg.exp`: 0 regressions, 2 new passes | **v1**, 2026-09-18, [gcc-patches 731861](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731861.html) -- reviewed 2026-09-19 | **Send v2, which has not been written yet** -- the patch in the directory is still v1.  Jason Merrill accepted treating `void_list_node` in `constexpr_global_ctx::put_value` as equivalent to an unmapped key, but rejected extending that to `void_node`, which indicates an object still within its storage duration ([731926](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731926.html)).  Agreed in [731931](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731931.html): v2 drops the `void_node` case and comments the skips that remain deliberate |
 
 ## Landed
 
-| Patch directory | Bug | PR | Upstream commit | Landed |
+**Sent** is the revision upstream took, which is not always the first one; the
+thread behind that link is where the review rationale lives, and nothing else
+records it once the row leaves the table above.
+
+| Bug | PR | Sent | Upstream commit | Landed |
 |---|---|---|---|---|
-| [`upstream-patch-pr127282-assume-side-effect-leak/`](upstream-patch-pr127282-assume-side-effect-leak/) | GCC-9 | [PR127282](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127282) | [`7b60a368fb1`](https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=7b60a368fb19b33f8676482a233d389cbc47b85e) | 2026-09-14 |
+| GCC-9 | [PR127282](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127282) | **v1**, 2026-09-14, [gcc-patches 731238](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731238.html) | [`7b60a368fb1`](https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=7b60a368fb19b33f8676482a233d389cbc47b85e) | 2026-09-14 |
+| GCC-5 | [PR127281](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127281) | **v2**, 2026-09-18, [gcc-patches 731860](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731860.html) -- "Pushed, thanks" ([731990](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731990.html)) | [`e8207be46a6`](https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=e8207be46a6ebbbc079adc72c763b648de5c2da5) | 2026-09-20 |
+| GCC-29 | [PR127295](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127295) | **v1**, 2026-09-18, [gcc-patches 731862](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731862.html) -- "Pushed with that adjustment" ([731989](https://gcc.gnu.org/pipermail/gcc-patches/2026-September/731989.html)), the adjustment being two commit-message lines rewrapped to 76 columns | [`3bd34f8936c`](https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=3bd34f8936c7edb25d35bc2816a863ca902938bf) | 2026-09-20 |
+
+Neither 2026-09-20 commit reshaped the diff: both are identical in content to
+`89be19f150d` and `cd0063e40f4` on their `upstream-patch/` branches, so unlike
+[PR127282](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127282) there is no
+upstream spelling for the next rebase to adopt.
 
 ## Candidates: simple, orthogonal fixes
 
@@ -67,7 +86,6 @@ happens to contain.  Where the two differ, the `Notes` column says so.
 | [GCC-24](../gnu_gcc/bug-reports/gcc-24/gcc-24-noexcept-body-wrapper-assumption.md) | A noexcept function with a contract segfaults the compiler under `-fno-enforce-eh-specs` | [PR127173](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127173) | [`1220-noexcept-body-wrapper-detected`](../gnu_gcc/branch-history/1000-p2900-fixes/1220-noexcept-body-wrapper-detected.md) | a self-contained rewrite of one `if` head | every name involved is already upstream |
 | [GCC-25](../gnu_gcc/bug-reports/gcc-25/gcc-25-postcondition-result-name-attribute.md) | A postcondition's result-name-introducer does not accept `identifier attribute-specifier-seq :` | [PR125725](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=125725) | [`1170-result-name-introducer`](../gnu_gcc/branch-history/1000-p2900-fixes/1170-result-name-introducer.md) | one new function and both its call sites | |
 | [GCC-28](../gnu_gcc/bug-reports/gcc-28/gcc-28-xobj-member-in-predicate-ctor-message.md) | A member named unqualified in an explicit-object member function's contract is diagnosed with a constructor/destructor message | [PR127294](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=127294) | [`1200-xobj-member-in-predicate`](../gnu_gcc/branch-history/1000-p2900-fixes/1200-xobj-member-in-predicate.md) | two added conjuncts | ours |
-| [GCC-45](../gnu_gcc/bug-reports/gcc-45/gcc-45-contract-on-typedef-declaration.md), [GCC-46](../gnu_gcc/bug-reports/gcc-46/gcc-46-contract-on-function-typed-parameter.md), [GCC-47](../gnu_gcc/bug-reports/gcc-47/gcc-47-requires-clause-on-parameter.md) | A contract specifier on a typedef declaration or on a parameter of function type, and a requires-clause on a parameter of function type, are each accepted and silently dropped | none filed | [`1250-contract-on-non-function-declarator`](../gnu_gcc/branch-history/1000-p2900-fixes/1250-contract-on-non-function-declarator.md) + [`0160-requires-clause-on-parameter`](../gnu_gcc/branch-history/0100-upstream-bugfixes/0160-requires-clause-on-parameter.md) | a coupled two-patch series sharing `classify_non_function_declarator` | GCC-47 is not a contracts bug -- its test needs only C++20 -- which makes it the most independently attractive of the three.  All three need a PR filed first |
 
 ## Considered and excluded
 
@@ -77,6 +95,11 @@ at a later date, but are not yet ready to upstream.
 **The fix itself needs branch infrastructure.**  Not liftable, and a minimal
 upstream fix would be a different change that has not been written.
 
+* GCC-45, GCC-47 -- `1250-contract-on-non-function-declarator` turned out to
+  need `1240-contract-specifier-at-declarator-position` under it, and one
+  commit now fixes both bugs, so neither lifts alone.  GCC-46 was retired into
+  GCC-45.  Listed as a candidate until 2026-09-20 on the belief that this was
+  a two-patch series; the fix is much more involved than that.
 * GCC-12, GCC-33 -- `1130-result-binding-one-object` interleaves the retval
   stand-in prologue, a `4000-p3098` capture-flag loop and the copy-back
   epilogue with no cut that leaves balanced braces.
